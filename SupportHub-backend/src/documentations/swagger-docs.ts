@@ -1,0 +1,199 @@
+import swaggerUi from "swagger-ui-express";
+import { Express } from "express";
+import j2s from "joi-to-swagger";
+import Joi from "joi";
+import { signupValidation, loginValidation, googleValidation } from "../validations/auth.validation";
+
+const slackSettingsValidation = Joi.object({
+  slackWebhookUrl: Joi.string().uri().allow("").description("Slack webhook URL"),
+  newTickets: Joi.boolean().description("Notify on new tickets"),
+  ticketAssignments: Joi.boolean().description("Notify on ticket assignments"),
+  statusChanges: Joi.boolean().description("Notify on status changes"),
+});
+
+const swaggerDocument = {
+  openapi: "3.0.0",
+  info: {
+    title: "SupportHub Backend API",
+    version: "1.0.0",
+    description: "API documentation for SupportHub Backend",
+  },
+  components: {
+    securitySchemes: {
+      bearerAuth: {
+        type: "http",
+        scheme: "bearer",
+        bearerFormat: "JWT",
+      },
+    },
+  },
+  security: [
+    {
+      bearerAuth: [],
+    },
+  ],
+  paths: {
+    "/api/auth/signup": {
+      post: {
+        summary: "User signup",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: j2s(signupValidation).swagger,
+            },
+          },
+        },
+        responses: {
+          "201": {
+            description: "User registered successfully",
+          },
+          "409": {
+            description: "User already exists",
+          },
+        },
+      },
+    },
+    "/api/auth/login": {
+      post: {
+        summary: "User login",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: j2s(loginValidation).swagger,
+            },
+          },
+        },
+        responses: {
+          "200": {
+            description: "Login successful",
+          },
+          "400": {
+            description: "Invalid credentials",
+          },
+        },
+      },
+    },
+    "/api/auth/google-signin": {
+      post: {
+        summary: "Google sign-in",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: j2s(googleValidation).swagger,
+            },
+          },
+        },
+        responses: {
+          "200": {
+            description: "Google sign-in successful",
+          },
+        },
+      },
+    },
+    "/api/settings/slack-integrations": {
+      get: {
+        summary: "Get Slack integration settings",
+        security: [{ bearerAuth: [] }],
+        responses: {
+          "200": {
+            description: "Slack settings retrieved successfully",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    message: { type: "string" },
+                    data: {
+                      type: "object",
+                      properties: {
+                        slackWebhookUrl: { type: "string", nullable: true },
+                        newTickets: { type: "boolean" },
+                        ticketAssignments: { type: "boolean" },
+                        statusChanges: { type: "boolean" },
+                      },
+                      nullable: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+          "400": {
+            description: "Bad request",
+          },
+        },
+      },
+    },
+    "/api/settings/slack-integration": {
+      post: {
+        summary: "Update Slack integration settings",
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: j2s(slackSettingsValidation).swagger,
+            },
+          },
+        },
+        responses: {
+          "200": {
+            description: "Slack settings updated successfully",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    message: { type: "string" },
+                    data: j2s(slackSettingsValidation).swagger,
+                  },
+                },
+              },
+            },
+          },
+          "400": {
+            description: "Bad request",
+          },
+        },
+      },
+      put: {
+        summary: "Update Slack integration settings",
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: j2s(slackSettingsValidation).swagger,
+            },
+          },
+        },
+        responses: {
+          "200": {
+            description: "Slack settings updated successfully",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    message: { type: "string" },
+                    data: j2s(slackSettingsValidation).swagger,
+                  },
+                },
+              },
+            },
+          },
+          "400": {
+            description: "Bad request",
+          },
+        },
+      },
+    },
+  },
+};
+
+export function setupSwagger(app: Express) {
+  app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+}
