@@ -58,6 +58,18 @@ router.delete(
   WrapAsync(TicketsController.deleteTicket)
 );
 
+router.post(
+  "/rescore/all",
+  WrapAsync(authenticateUser),
+  WrapAsync(TicketsController.rescoreAllOpenTickets)
+);
+
+router.post(
+  "/:id/rescore",
+  WrapAsync(authenticateUser),
+  WrapAsync(TicketsController.rescoreTicket)
+);
+
 router.use(errorHandler);
 
 export default router;

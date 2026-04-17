@@ -66,6 +66,61 @@ async function main() {
       });
     }
   }
+
+  // Seed a demo client user
+  const clientEmail = "client@supporthub.com";
+  const clientPassword = "Client123...";
+
+  let clientUser = await prisma.users.findUnique({
+    where: { email: clientEmail },
+  });
+
+  if (!clientUser) {
+    const hashedClientPassword = await bcrypt.hash(clientPassword, 10);
+    clientUser = await prisma.users.create({
+      data: {
+        firstName: "Demo",
+        lastName: "Client",
+        email: clientEmail,
+        password: hashedClientPassword,
+        provider: "credentials",
+        providerId: "seeded-client",
+      },
+    });
+  }
+
+  const clientRole = roles.find((r) => r.name === "client");
+  if (clientUser && clientRole) {
+    const existingRole = await prisma.userRoles.findFirst({
+      where: { userId: clientUser.id, roleId: clientRole.id },
+    });
+    if (!existingRole) {
+      await prisma.userRoles.create({
+        data: { userId: clientUser.id, roleId: clientRole.id },
+      });
+    }
+  }
+
+  // Create a client record linked to the demo user
+  const existingClient = await prisma.clients.findFirst({
+    where: { userId: clientUser.id },
+  });
+
+  if (!existingClient) {
+    const { generateClientCode } = await import("../src/helpers/generateClientCode");
+    const clientCode = await generateClientCode(prisma);
+    await prisma.clients.create({
+      data: {
+        clientCode,
+        companyName: "Demo Company",
+        companyDomain: "democompany.com",
+        supportTier: "standard",
+        status: "active",
+        createdBy: clientUser.id,
+        userId: clientUser.id,
+      },
+    });
+  }
 }
 
 main()

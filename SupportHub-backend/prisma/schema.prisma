@@ -124,19 +124,24 @@ enum PriorityEnum {
 }
 
 model Tickets {
-  id            String        @id @default(uuid())
-  ticketCode    String        @unique
-  title         String
-  status        StatusEnum    @default(in_progress)
-  priority      PriorityEnum  @default(medium)
-  description   String?
-  createdBy     String?
-  imageUrl      String?
-  internalNotes String?
-  tags          String[]      @default([])
-  dueDate       DateTime?
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  id               String        @id @default(uuid())
+  ticketCode       String        @unique
+  title            String
+  status           StatusEnum    @default(in_progress)
+  priority         PriorityEnum  @default(medium)
+  description      String?
+  createdBy        String?
+  imageUrl         String?
+  internalNotes    String?
+  tags             String[]      @default([])
+  dueDate          DateTime?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  aiPriorityScore  Float?
+  sentimentScore   Float?
+  complexityScore  Float?
+  agingScore       Float?
+  llmReasoning     String?
   owner         Users?        @relation(fields: [createdBy], references: [id], onDelete: Cascade)
   UserTickets   UserTickets[]
 

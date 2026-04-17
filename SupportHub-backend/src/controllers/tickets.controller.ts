@@ -105,6 +105,24 @@ class TicketsController {
         error: error.message });
     }
   }
+  static async rescoreTicket(req: Request, res: Response): Promise<Response> {
+    try {
+      const { id } = req.params;
+      const result = await TicketsService.rescoreTicket(id);
+      return handleServiceResult(res, result, "Ticket rescored successfully", ERROR_MESSAGES.GENERAL_ERROR, HTTP_OK, HTTP_BAD_REQUEST);
+    } catch (error: any) {
+      return res.status(HTTP_BAD_REQUEST).json({ error: error.message });
+    }
+  }
+
+  static async rescoreAllOpenTickets(_req: Request, res: Response): Promise<Response> {
+    try {
+      const result = await TicketsService.rescoreAllOpenTickets();
+      return handleServiceResult(res, result, "All open tickets rescored", ERROR_MESSAGES.GENERAL_ERROR, HTTP_OK, HTTP_BAD_REQUEST);
+    } catch (error: any) {
+      return res.status(HTTP_BAD_REQUEST).json({ error: error.message });
+    }
+  }
 }
 
 export default TicketsController;

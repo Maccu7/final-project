@@ -19,6 +19,7 @@ import {
   throwIfTicketNotFound,
   throwIfNotAuthorized,
 } from "../helpers/ErrorHandling";
+import { scoreTicket, rescoreOpenTickets } from "./aiPriority.service";
 
 const prisma = new PrismaClient();
 const clientService = new ClientService();
@@ -266,6 +267,28 @@ export class TicketsService {
         return { error: ticketResult?.error };
       }
 
+      // Score ticket with AI (non-blocking — don't fail ticket creation if it errors)
+      if (process.env.GROQ_API_KEY) {
+        scoreTicket(
+          ticketResult.title,
+          ticketResult.description,
+          ticketResult.createdAt
+        )
+          .then((scores) =>
+            prisma.tickets.update({
+              where: { id: ticketResult.id },
+              data: {
+                aiPriorityScore: scores.aiPriorityScore,
+                sentimentScore: scores.sentimentScore,
+                complexityScore: scores.complexityScore,
+                agingScore: scores.agingScore,
+                llmReasoning: scores.llmReasoning,
+              },
+            })
+          )
+          .catch((err) => console.error("[aiPriority] Scoring error:", err));
+      }
+
       // Send Slack notification (non-blocking - don't fail if it errors)
       try {
         const slackSettings = await SettingsService.getSlackSettings(userId);
@@ -481,5 +504,52 @@ export class TicketsService {
     throwIfNotAuthorized(user, ticket);
     await TicketsService.deleteTicket(id);
     return true;
+  }
+
+  static async rescoreTicket(id: string) {
+    const ticket = await prisma.tickets.findUnique({
+      where: { id },
+      select: { id: true, title: true, description: true, createdAt: true },
+    });
+    if (!ticket) return { error: ERROR_MESSAGES.TICKET_NOT_FOUND };
+
+    const scores = await scoreTicket(
+      ticket.title,
+      ticket.description,
+      ticket.createdAt
+    );
+    const updated = await prisma.tickets.update({
+      where: { id },
+      data: {
+        aiPriorityScore: scores.aiPriorityScore,
+        sentimentScore: scores.sentimentScore,
+        complexityScore: scores.complexityScore,
+        agingScore: scores.agingScore,
+        llmReasoning: scores.llmReasoning,
+      },
+    });
+    return { data: { ...updated, aiScores: scores } };
+  }
+
+  static async rescoreAllOpenTickets() {
+    const openTickets = await prisma.tickets.findMany({
+      where: { status: { in: ["new", "in_progress", "assigned", "awaiting_client"] } },
+      select: { id: true, title: true, description: true, createdAt: true },
+    });
+
+    await rescoreOpenTickets(openTickets, async (ticketId, scores) => {
+      await prisma.tickets.update({
+        where: { id: ticketId },
+        data: {
+          aiPriorityScore: scores.aiPriorityScore,
+          sentimentScore: scores.sentimentScore,
+          complexityScore: scores.complexityScore,
+          agingScore: scores.agingScore,
+          llmReasoning: scores.llmReasoning,
+        },
+      });
+    });
+
+    return { data: { rescored: openTickets.length } };
   }
 }
