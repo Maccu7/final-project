@@ -7,6 +7,11 @@ class DashboardAPI {
     const res = response.data
     return res.data
   }
+
+  async getClientDashboardData(): Promise<any> {
+    const response = await axiosInstance.get('/dashboard/client')
+    return response.data.data
+  }
 }
 
 export const dashboardAPI = new DashboardAPI()

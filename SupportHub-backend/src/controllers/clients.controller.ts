@@ -16,6 +16,9 @@ export class ClientController {
     try {
       const clientData: CreateClientDto = req.body;
       const client = await clientService.createClient(clientData);
+      if ('error' in client) {
+        return res.status(HTTP_BAD_REQUEST).json({ message: client.error });
+      }
       return res.status(HTTP_CREATED).json({
         message: SUCCESS_MESSAGES.CLIENT_CREATED,
         data: client,

@@ -5,14 +5,17 @@ import { DashboardTab } from '@/types/dashboard.types'
 interface DashboardTabsProps {
   activeTab: DashboardTab
   onTabChange: (tab: DashboardTab) => void
+  isAdmin?: boolean
 }
-
-const tabs: DashboardTab[] = ['Overview', 'Tickets', 'Clients', 'Products']
 
 export default function DashboardTabs({
   activeTab,
   onTabChange,
+  isAdmin = false,
 }: DashboardTabsProps) {
+  const tabs: DashboardTab[] = isAdmin
+    ? ['Overview', 'Tickets', 'Clients', 'Products']
+    : ['Overview', 'Tickets']
   return (
     <div className="border-b border-gray-200 mb-6">
       <nav className="-mb-px flex space-x-8">

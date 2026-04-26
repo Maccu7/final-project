@@ -39,6 +39,12 @@ router.get(
   WrapAsync(DashboardController.getAllDashboardData)
 );
 
+router.get(
+  "/client",
+  WrapAsync(authenticateUser),
+  WrapAsync(DashboardController.getClientDashboardData)
+);
+
 router.use(errorHandler);
 
 export default router;

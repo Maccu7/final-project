@@ -86,6 +86,32 @@ export class DashboardService {
     };
   }
 
+  static async getClientDashboardData(userId: string) {
+    const client = await prisma.clients.findFirst({ where: { userId } });
+    const clientId = client?.id;
+
+    const tickets = await prisma.tickets.findMany({
+      where: clientId ? { clientId } : { createdBy: userId },
+      include: {
+        product: { select: { name: true } },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    const total = tickets.length;
+    const open = tickets.filter(t => ["new", "in_progress", "assigned", "awaiting_client"].includes(t.status)).length;
+    const resolved = tickets.filter(t => t.status === "resolved").length;
+
+    const grouped = {
+      new: tickets.filter(t => t.status === "new"),
+      in_progress: tickets.filter(t => t.status === "in_progress"),
+      awaiting_client: tickets.filter(t => t.status === "awaiting_client"),
+      resolved: tickets.filter(t => t.status === "resolved"),
+    };
+
+    return { totalTickets: total, openTickets: open, resolvedTickets: resolved, tickets: grouped };
+  }
+
   static async getTicketsByStatus() {
     const ticketsByStatus = await prisma.tickets.findMany({
       include: {

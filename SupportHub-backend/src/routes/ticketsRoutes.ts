@@ -9,6 +9,7 @@ import {
 } from "../validations/ticket.validation";
 import { WrapAsync } from "../middlewares/wrapAsync";
 import { authenticateUser } from "../middlewares/authenticateUser";
+import { requireRole } from "../middlewares/requireRole";
 
 const router = Router();
 const upload = multer({ dest: "uploads/" });
@@ -61,12 +62,14 @@ router.delete(
 router.post(
   "/rescore/all",
   WrapAsync(authenticateUser),
+  WrapAsync(requireRole("super_admin")),
   WrapAsync(TicketsController.rescoreAllOpenTickets)
 );
 
 router.post(
   "/:id/rescore",
   WrapAsync(authenticateUser),
+  WrapAsync(requireRole("super_admin")),
   WrapAsync(TicketsController.rescoreTicket)
 );
 

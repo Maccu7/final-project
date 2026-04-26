@@ -15,12 +15,15 @@ import { queryClient } from '@/providers/QueryProvider'
 export default function DashboardPage() {
   const { data: session } = useSession()
   const userName = session?.user?.name || ''
+  const isAdmin = session?.user?.role === 'super_admin'
   const [activeTab, setActiveTab] = useState<DashboardTab>('Overview')
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ['get-statistics'],
-    queryFn: dashboardAPI.getAllDashboardData,
+    queryKey: ['get-statistics', isAdmin],
+    queryFn: isAdmin
+      ? dashboardAPI.getAllDashboardData.bind(dashboardAPI)
+      : dashboardAPI.getClientDashboardData.bind(dashboardAPI),
   })
 
   const handleTicketCreated = async () => {
@@ -51,13 +54,14 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <DashboardTabs activeTab={activeTab} onTabChange={setActiveTab} />
+      <DashboardTabs activeTab={activeTab} onTabChange={setActiveTab} isAdmin={isAdmin} />
 
       {renderDashboardTabContent(
         data as DashboardData,
         activeTab,
         isLoading,
-        error as string | null
+        (error as Error)?.message ?? null,
+        isAdmin
       )}
 
       <CreateTicketModal

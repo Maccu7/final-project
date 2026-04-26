@@ -31,6 +31,7 @@ router.put(
 router.delete(
   "/:id/soft-delete",
   WrapAsync(authenticateUser),
+  WrapAsync(requireRole("super_admin")),
   WrapAsync(UsersController.softDeleteUser)
 );
 

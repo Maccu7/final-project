@@ -20,7 +20,7 @@ export const clientService = {
   },
 
   create: async (clientData: CreateClientDto) => {
-    const { data } = await axiosInstance.post<{ status: string; data: Client }>(
+    const { data } = await axiosInstance.post<{ message: string; data: Client }>(
       BASE_URL,
       clientData
     )
@@ -45,7 +45,7 @@ export const clientService = {
 
   getProductsForClient: async (id: string) => {
     const { data } = await axiosInstance.get(
-      `/api/clients/${id}/products`
+      `/clients/${id}/products`
     )
     return data
   },
@@ -59,7 +59,7 @@ export const clientService = {
 
   removeProductFromClient: async (id: string, productId: string) => {
     await axiosInstance.delete(
-      `/api/clients/${id}/products/${productId}`
+      `/clients/${id}/products/${productId}`
     )
   },
 }

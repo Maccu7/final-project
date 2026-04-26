@@ -265,7 +265,11 @@ function CreateTicketModal({ isOpen, onClose, onTicketCreated }: Props) {
       formDataToSend.append('internalNotes', formData.internalNotes)
       formDataToSend.append('tags', formData.tags || '')
 
-      await ticketService.createTicket(formDataToSend)
+      const result = await ticketService.createTicket(formDataToSend)
+      if (result?.status === 'ERROR') {
+        toast.error(result.message || 'Failed to create ticket. Please try again.')
+        return
+      }
       toast.success('Ticket created successfully!')
 
       setFormData({

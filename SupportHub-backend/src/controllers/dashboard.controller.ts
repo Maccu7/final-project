@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { DashboardService } from "../services/dashboard.service";
 import { ERROR_MESSAGES } from "../constants/response/errors";
+import { AuthenticatedRequest } from "../middlewares/authMiddleware";
 
 export class DashboardController {
   static async getOverviewStats(_req: Request, res: Response) {
@@ -104,6 +105,16 @@ export class DashboardController {
         success: false,
         message: ERROR_MESSAGES.FAILED_TO_FETCH_DASHBOARD_DATA,
       });
+    }
+  }
+
+  static async getClientDashboardData(req: Request, res: Response) {
+    try {
+      const userId = (req as AuthenticatedRequest).user?.id as string;
+      const data = await DashboardService.getClientDashboardData(userId);
+      res.status(200).json({ success: true, data });
+    } catch (error) {
+      res.status(500).json({ success: false, message: "Failed to fetch client dashboard data" });
     }
   }
 }

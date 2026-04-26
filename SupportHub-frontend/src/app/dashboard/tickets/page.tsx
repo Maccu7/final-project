@@ -36,12 +36,13 @@ export default function TicketsPage() {
   const handleDelete = async () => {
     if (!selectedTicket) return
     try {
-      await ticketService.deleteTicket(selectedTicket.id)
+      const result = await ticketService.deleteTicket(selectedTicket.id)
+      if (result && (result as any).status === 'ERROR') return
       setIsDeleteModalOpen(false)
       setSelectedTicket(null)
 
       const data = await ticketService.getUserTickets()
-      const mappedTickets: Ticket[] = mapTicketsSimple(data)
+      const mappedTickets: Ticket[] = mapTicketsSimple(Array.isArray(data) ? data : [])
       setTickets(mappedTickets)
     } catch {}
   }
@@ -119,7 +120,7 @@ export default function TicketsPage() {
   const handleTicketCreated = async () => {
     try {
       const data = await ticketService.getUserTickets()
-      const mappedTickets: Ticket[] = mapTickets(data)
+      const mappedTickets: Ticket[] = mapTickets(Array.isArray(data) ? data : [])
       setTickets(mappedTickets)
     } catch {
       setTickets([])

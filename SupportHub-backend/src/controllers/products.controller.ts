@@ -203,9 +203,15 @@ export default class ProductsController {
     req: Request,
     res: Response
   ): Promise<Response> {
-    const { id } = req.params;
-    const clients = await productService.getClientsForProduct(id);
-    return res.status(HTTP_OK).json(clients);
+    try {
+      const { id } = req.params;
+      const clients = await productService.getClientsForProduct(id);
+      return res.status(HTTP_OK).json(clients);
+    } catch (error) {
+      return res
+        .status(HTTP_INTERNAL_SERVER_ERROR)
+        .json({ error: ERROR_MESSAGES.PRODUCT_RETRIEVE_FAILED });
+    }
   }
   static async addClientToProduct(
     req: Request,
@@ -254,10 +260,16 @@ export default class ProductsController {
     req: Request,
     res: Response
   ): Promise<Response> {
-    const { productId, clientId } = req.params;
-    await productService.removeClientFromProduct(productId, clientId);
-    return res
-      .status(HTTP_OK)
-      .json({ message: SUCCESS_MESSAGES.CLIENT_REMOVED_FROM_PRODUCT });
+    try {
+      const { productId, clientId } = req.params;
+      await productService.removeClientFromProduct(productId, clientId);
+      return res
+        .status(HTTP_OK)
+        .json({ message: SUCCESS_MESSAGES.CLIENT_REMOVED_FROM_PRODUCT });
+    } catch (error) {
+      return res
+        .status(HTTP_INTERNAL_SERVER_ERROR)
+        .json({ error: ERROR_MESSAGES.PRODUCT_DELETE_FAILED });
+    }
   }
 }

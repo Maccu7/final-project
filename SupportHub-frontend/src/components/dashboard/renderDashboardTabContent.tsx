@@ -7,10 +7,11 @@ import ClientsTab from '@/components/dashboard/ClientsTab'
 import ProductsTab from '@/components/dashboard/ProductsTab'
 
 export default function renderDashboardTabContent(
-  data: DashboardData | null,
+  data: any,
   activeTab: DashboardTab,
   isLoading: boolean,
-  error: string | null
+  error: string | null,
+  isAdmin: boolean = false
 ) {
   if (!data && !isLoading) {
     return (
@@ -20,6 +21,28 @@ export default function renderDashboardTabContent(
     )
   }
 
+  // Client dashboard — data shape: { totalTickets, openTickets, resolvedTickets, tickets }
+  if (!isAdmin) {
+    const overviewData = data
+      ? {
+          stats: {
+            totalTickets: data.totalTickets ?? 0,
+            openTickets: data.openTickets ?? 0,
+          },
+          statusDistribution: [],
+        }
+      : null
+
+    switch (activeTab) {
+      case 'Tickets':
+        return <TicketsTab data={data?.tickets || null} loading={isLoading} />
+      case 'Overview':
+      default:
+        return <OverviewTab data={overviewData} loading={isLoading} />
+    }
+  }
+
+  // Admin dashboard
   switch (activeTab) {
     case 'Overview':
     default:
